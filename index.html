@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Zombies VS Matem&aacute;ticas - Edici&oacute;n Deluxe</title>
+<style>
+*{
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+}
+html, body{
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #060a08;
+    color: #fff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+button, input{ font-family: inherit; }
+
+/* MENÚ PRINCIPAL */
+#menu{
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at center, #10241b 0%, #040806 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+.menuBox{
+    width: 520px;
+    max-width: 92vw;
+    padding: 35px 25px;
+    border: 2px solid #2d4d3c;
+    border-radius: 16px;
+    background: rgba(6, 15, 11, 0.95);
+    box-shadow: 0 0 50px rgba(0,0,0,0.9);
+    text-align: center;
+}
+.logo{
+    font-size: 36px;
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 15px;
+    letter-spacing: -1px;
+}
+.logo .red{ color: #e74c3c; }
+.logo .green{ color: #2ecc71; }
+.subtitle{
+    color: #95a5a6;
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+.inputGroup{
+    margin-bottom: 20px;
+    text-align: left;
+}
+.inputGroup label{
+    display: block;
+    font-size: 13px;
+    font-weight: bold;
+    color: #2ecc71;
+    margin-bottom: 6px;
+}
+.nameInput{
+    width: 100%;
+    height: 48px;
+    background: #0e1d15;
+    border: 2px solid #2d4d3c;
+    border-radius: 8px;
+    padding: 0 15px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: bold;
+    outline: none;
+    transition: border-color 0.2s;
+}
+.nameInput:focus{
+    border-color: #2ecc71;
+}
+.btn{
+    width: 100%;
+    height: 52px;
+    border-radius: 8px;
+    border: 0;
+    background: #e74c3c;
+    color: #fff;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #962d22;
+    transition: transform 0.1s, background 0.2s;
+}
+.btn:hover{ background: #ff5e4d; }
+.btn:active{ transform: translateY(2px); box-shadow: 0 2px 0 #962d22; }
+
+/* CONTENEDOR DEL JUEGO */
+#gameContainer{
+    display: none;
+    position: fixed;
+    inset: 0;
+    flex-direction: column;
+}
+
+/* BARRA SUPERIOR (HUD) */
+#hud{
+    height: 60px;
+    background: #0b1410;
+    border-bottom: 2px solid #23382c;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 10px;
+    z-index: 10;
+}
+.hudStat{
+    font-size: 13px;
+    font-weight: bold;
+}
+.hudStat span{ color: #2ecc71; font-size: 15px; }
+.hudStat.lives span{ color: #e74c3c; }
+.hudStat.time span{ color: #f1c40f; }
+.hudStat.ammo span{ color: #3498db; }
+.hudStat.playerSpan{ color: #e67e22; }
+
+/* ÁREA DEL MAPA / CANVAS */
+#canvasWrap{
+    flex: 1;
+    position: relative;
+    background: #0f1a14;
+    cursor: crosshair;
+}
+#gameCanvas{
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* MENSAJES FLOTANTES */
+#msg{
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 26px;
+    font-weight: 900;
+    text-shadow: 0 2px 8px #000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+/* PREGUNTA Y RESPUESTAS */
+#mathPanel{
+    height: 175px;
+    background: #09120e;
+    border-top: 2px solid #23382c;
+    padding: 12px 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+}
+#qText{
+    font-size: 18px;
+    font-weight: bold;
+    color: #e2f0d9;
+    margin-bottom: 12px;
+    text-align: center;
+}
+.answersGrid{
+    width: 100%;
+    max-width: 650px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+.ansBtn{
+    height: 44px;
+    border: 1px solid #2e4d3a;
+    border-radius: 6px;
+    background: #14241b;
+    color: #fff;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+.ansBtn:hover{
+    background: #1f382a;
+    border-color: #2ecc71;
+}
+
+/* BOTÓN DE AUDIO */
+#audioBtn{
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0,0,0,0.6);
+    border: 1px solid #2e4d3a;
+    color: #fff;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+    cursor: pointer;
+    z-index: 20;
+}
+
+.controlsHint{
+    position: absolute;
+    bottom: 185px;
+    left: 10px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    pointer-events: none;
+}
+
+/* PANTALLAS FINALES */
+.endScreen{
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.92);
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+.winBox{
+    position: relative;
+    z-index: 2001;
+    border-color: #f1c40f;
+    box-shadow: 0 0 50px rgba(241, 196, 15, 0.3);
+}
+.winBox h1{
+    color: #f1c40f;
+    font-size: 36px;
+    margin-bottom: 10px;
+}
+#confettiCanvas{
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 2000;
+}
+</style>
+</head>
+<body>
+
+<!-- MENÚ PRINCIPAL -->
+<div id="menu">
+    <div class="menuBox">
+        <div class="logo">ZOMBIES <span class="red">VS</span> <span class="green">MATEM&Aacute;TICAS</span></div>
+        <div class="subtitle">
+            Mueve tu personaje con <b>WASD / Flechas</b> y dispara con el <b>Click del Mouse</b>.<br>
+            &iexcl;Resuelve problemas para ganar balas y salvar la ciudad!
+        </div>
+        
+        <div class="inputGroup">
+            <label for="playerName">Escribe tu Nombre / Apodo:</label>
+            <input type="text" id="playerName" class="nameInput" placeholder="Ej: Jugador Pro" maxlength="15">
+        </div>
+
+        <button class="btn" onclick="startGame()">&iexcl;INICIAR AVENTURA!</button>
+    </div>
+</div>
+
+<!-- JUEGO EN VIVO -->
+<div id="gameContainer">
+    <button id="audioBtn" onclick="toggleAudio()">??</button>
+    
+    <div id="hud">
+        <div class="hudStat">JUGADOR: <span id="hudPlayer" class="playerSpan">H&eacute;roe</span></div>
+        <div class="hudStat lives">VIDAS: <span id="lives">3</span></div>
+        <div class="hudStat ammo">MUNICI&Oacute;N: <span id="ammo">0</span></div>
+        <div class="hudStat">NIVEL: <span id="level">1</span></div>
+        <div class="hudStat time">TIEMPO: <span id="timer">30</span>s</div>
+        <div class="hudStat">PUNTOS: <span id="score">0</span></div>
+    </div>
+
+    <div id="canvasWrap">
+        <canvas id="gameCanvas"></canvas>
+        <div id="msg"></div>
+        <div class="controlsHint">Mover: WASD/Flechas | Apuntar & Disparar: Mouse</div>
+    </div>
+
+    <div id="mathPanel">
+        <div id="qText">Cargando desaf&iacute;o...</div>
+        <div class="answersGrid" id="answers"></div>
+    </div>
+</div>
+
+<!-- PANTALLA DE VICTORIA -->
+<div id="winScreen" class="endScreen">
+    <canvas id="confettiCanvas"></canvas>
+    <div class="menuBox winBox">
+        <h1>?? &iexcl;VICTORIA TOTAL! ??</h1>
+        <div id="winText" class="subtitle" style="color: #fff; font-size: 16px;"></div>
+        <button class="btn" style="background: #2ecc71; box-shadow: 0 4px 0 #1e8449;" onclick="location.reload()">&iexcl;JUGAR OTRA VEZ!</button>
+    </div>
+</div>
+
+<!-- PANTALLA DE GAME OVER -->
+<div id="loseScreen" class="endScreen">
+    <div class="menuBox">
+        <h1 style="color: #e74c3c; font-size: 36px; margin-bottom: 10px;">&iexcl;GAME OVER!</h1>
+        <div id="loseText" class="subtitle"></div>
+        <button class="btn" onclick="location.reload()">&iexcl;REINTENTAR!</button>
+    </div>
+</div>
+
+<script>
+/* =========================================================
+   SISTEMA DE SONIDO Y MÚSICA SINTETIZADA
+========================================================= */
+let audioCtx = null;
+let musicMuted = false;
+let bgMusicInterval = null;
+let playerName = "H&eacute;roe";
+
+function initAudio(){
+    if(!audioCtx){
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if(audioCtx.state === 'suspended'){
+        audioCtx.resume();
+    }
+}
+
+function playSound(type){
+    if(!audioCtx || musicMuted) return;
+    
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    const now = audioCtx.currentTime;
+
+    if(type === 'shoot'){
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(350, now);
+        osc.frequency.exponentialRampToValueAtTime(80, now + 0.1);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        osc.start(now);
+        osc.stop(now + 0.1);
+    } else if(type === 'correct'){
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523, now);
+        osc.frequency.setValueAtTime(659, now + 0.08);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+        osc.start(now);
+        osc.stop(now + 0.25);
+    } else if(type === 'wrong'){
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.setValueAtTime(100, now + 0.1);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+        osc.start(now);
+        osc.stop(now + 0.25);
+    } else if(type === 'hit'){
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(120, now);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+        osc.start(now);
+        osc.stop(now + 0.15);
+    } else if(type === 'item'){
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, now);
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.15);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+        osc.start(now);
+        osc.stop(now + 0.15);
+    } else if(type === 'win'){
+        [523, 659, 783, 1046].forEach((f, idx) => {
+            let o = audioCtx.createOscillator();
+            let g = audioCtx.createGain();
+            o.type = 'triangle';
+            o.frequency.value = f;
+            g.gain.setValueAtTime(0.2, now + idx * 0.12);
+            g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.3);
+            o.connect(g);
+            g.connect(audioCtx.destination);
+            o.start(now + idx * 0.12);
+            o.stop(now + idx * 0.12 + 0.3);
+        });
+    }
+}
+
+const bgNotes = [220, 220, 261, 220, 293, 220, 261, 246, 196, 196, 246, 196, 261, 196, 246, 220];
+let bgIdx = 0;
+
+function startBGM(){
+    if(bgMusicInterval) clearInterval(bgMusicInterval);
+    bgMusicInterval = setInterval(() => {
+        if(!running || musicMuted || !audioCtx) return;
+        let freq = bgNotes[bgIdx % bgNotes.length];
+        bgIdx++;
+
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.18);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.18);
+    }, 200);
+}
+
+function toggleAudio(){
+    musicMuted = !musicMuted;
+    document.getElementById("audioBtn").innerText = musicMuted ? "??" : "??";
+}
+
+/* =========================================================
+   CANVAS & CONFIGURACIÓN DE JUEGO
+========================================================= */
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+function resize(){
+    const wrap = document.getElementById("canvasWrap");
+    canvas.width = wrap.clientWidth;
+    canvas.height = wrap.clientHeight;
+}
+window.addEventListener("resize", resize);
+
+/* =========================================================
+   ESTADO Y VARIABLES DE JUEGO
+========================================================= */
+let running = false;
+let lives = 3;
+let level = 1;
+let score = 0;
+let ammo = 0;
+let defeated = 0;
+let required = 0;
+let correctAnswer = 0;
+let timeLeft = 30;
+let timerInterval = null;
+
+const player = {
+    x: 0,
+    y: 0,
+    r: 16,
+    speed: 4.2
+};
+
+let mouseX = 0;
+let mouseY = 0;
+
+let enemies = [];
+let bullets = [];
+let particles = [];
+let items = [];
+
+const keys = {};
+
+window.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
+window.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
+
+canvas.addEventListener("mousemove", e => {
+    const rect = canvas.getBoundingClientRect();
+    mouseX = e.clientX - rect.left;
+    mouseY = e.clientY - rect.top;
+});
+
+canvas.addEventListener("mousedown", () => {
+    if(!running) return;
+    if(ammo > 0){
+        ammo--;
+        shootBullet();
+        updateHUD();
+    } else {
+        showMessage("&iexcl;SIN MUNICION! Resuelve problemas", "#e74c3c");
+    }
+});
+
+/* =========================================================
+   INICIO Y NIVELES
+========================================================= */
+function startGame(){
+    let input = document.getElementById("playerName").value.trim();
+    if(input !== "") playerName = input;
+    document.getElementById("hudPlayer").innerHTML = playerName;
+
+    initAudio();
+    startBGM();
+
+    document.getElementById("menu").style.display = "none";
+    document.getElementById("gameContainer").style.display = "flex";
+    resize();
+    
+    lives = 3;
+    level = 1;
+    score = 0;
+    ammo = 3;
+    running = true;
+
+    loadLevel();
+    requestAnimationFrame(gameLoop);
+}
+
+function loadLevel(){
+    player.x = canvas.width / 2;
+    player.y = canvas.height / 2;
+    defeated = 0;
+    enemies = [];
+    bullets = [];
+    particles = [];
+    items = [];
+
+    if(level === 3){
+        required = 1;
+        let pos = getRandomSpawn();
+        enemies.push({
+            x: pos.x,
+            y: pos.y,
+            r: 42,
+            speed: 0.12,
+            hp: 12,
+            maxHp: 12,
+            isBoss: true,
+            color: "#8e44ad"
+        });
+        showMessage("&iexcl;GRAN JEFE FINAL!", "#e74c3c");
+    } else {
+        required = 4 + level * 2;
+        for(let i = 0; i < required; i++){
+            let pos = getRandomSpawn();
+            let isFast = Math.random() > 0.7;
+            enemies.push({
+                x: pos.x,
+                y: pos.y,
+                r: isFast ? 12 : 15,
+                speed: isFast ? 0.3 : 0.15,
+                hp: 1,
+                maxHp: 1,
+                isBoss: false,
+                color: isFast ? "#e67e22" : "#27ae60"
+            });
+        }
+    }
+
+    updateHUD();
+    generateQuestion();
+}
+
+function getRandomSpawn(){
+    let side = Math.floor(Math.random() * 4);
+    let x, y;
+    if(side === 0){ x = Math.random() * canvas.width; y = -40; }
+    else if(side === 1){ x = canvas.width + 40; y = Math.random() * canvas.height; }
+    else if(side === 2){ x = Math.random() * canvas.width; y = canvas.height + 40; }
+    else { x = -40; y = Math.random() * canvas.height; }
+    return {x, y};
+}
+
+function updateHUD(){
+    document.getElementById("lives").innerText = lives;
+    document.getElementById("ammo").innerText = ammo;
+    document.getElementById("level").innerText = level === 3 ? "JEFE" : level;
+    document.getElementById("score").innerText = score;
+}
+
+/* =========================================================
+   MATEMÁTICAS Y PREGUNTAS
+========================================================= */
+function startTimer(){
+    clearInterval(timerInterval);
+    timeLeft = 30;
+    document.getElementById("timer").innerText = timeLeft;
+
+    timerInterval = setInterval(() => {
+        if(!running) return;
+        timeLeft--;
+        document.getElementById("timer").innerText = timeLeft;
+
+        if(timeLeft <= 0){
+            playSound('wrong');
+            showMessage("&iexcl;TIEMPO AGOTADO! ??", "#e74c3c");
+            generateQuestion();
+        }
+    }, 1000);
+}
+
+function generateQuestion(){
+    if(!running) return;
+    startTimer();
+
+    let pct = (Math.floor(Math.random() * 9) + 1) * 10;
+    let total = (Math.floor(Math.random() * 10) + 1) * 20;
+    let type = Math.floor(Math.random() * 3);
+
+    let text = "";
+    if(type === 0){
+        correctAnswer = (pct / 100) * total;
+        text = `&iquest;Cu&aacute;nto es el ${pct}% de $${total}?`;
+    } else if(type === 1){
+        correctAnswer = total - ((pct / 100) * total);
+        text = `Un producto de $${total} tiene ${pct}% de descuento. &iquest;Precio final?`;
+    } else {
+        correctAnswer = total + ((pct / 100) * total);
+        text = `Un producto de $${total} aumenta un ${pct}%. &iquest;Precio final?`;
+    }
+
+    correctAnswer = Math.round(correctAnswer);
+    document.getElementById("qText").innerHTML = text;
+
+    let options = [correctAnswer];
+    while(options.length < 4){
+        let fake = correctAnswer + (Math.floor(Math.random() * 5) - 2) * 10;
+        if(fake > 0 && !options.includes(fake)){
+            options.push(fake);
+        } else {
+            options.push(correctAnswer + options.length * 5);
+        }
+    }
+    options.sort(() => Math.random() - 0.5);
+
+    const answersContainer = document.getElementById("answers");
+    answersContainer.innerHTML = "";
+    options.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.className = "ansBtn";
+        btn.innerText = opt;
+        btn.onclick = () => checkAnswer(opt);
+        answersContainer.appendChild(btn);
+    });
+}
+
+function checkAnswer(selected){
+    if(!running) return;
+
+    if(selected === correctAnswer){
+        playSound('correct');
+        showMessage("&iexcl;CORRECTO! +2 Municiones ??", "#2ecc71");
+        score += 100;
+        ammo += 2;
+    } else {
+        playSound('wrong');
+        showMessage("&iexcl;INCORRECTO! ?", "#e74c3c");
+    }
+    updateHUD();
+    generateQuestion();
+}
+
+function shootBullet(){
+    playSound('shoot');
+    let angle = Math.atan2(mouseY - player.y, mouseX - player.x);
+    bullets.push({
+        x: player.x,
+        y: player.y,
+        vx: Math.cos(angle) * 11,
+        vy: Math.sin(angle) * 11
+    });
+}
+
+function createParticles(x, y, color, count = 8){
+    for(let i = 0; i < count; i++){
+        let angle = Math.random() * Math.PI * 2;
+        let speed = Math.random() * 3 + 1;
+        particles.push({
+            x, y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: 20,
+            color
+        });
+    }
+}
+
+function showMessage(txt, color){
+    const msg = document.getElementById("msg");
+    msg.innerHTML = txt;
+    msg.style.color = color;
+    msg.style.opacity = 1;
+    setTimeout(() => msg.style.opacity = 0, 900);
+}
+
+/* =========================================================
+   ANIMACIÓN DE CONFETI PARA LA VICTORIA
+========================================================= */
+let confettiPieces = [];
+function startConfetti(){
+    const cCanvas = document.getElementById("confettiCanvas");
+    const cCtx = cCanvas.getContext("2d");
+    cCanvas.width = window.innerWidth;
+    cCanvas.height = window.innerHeight;
+
+    const colors = ['#f1c40f', '#e74c3c', '#2ecc71', '#3498db', '#9b59b6', '#e67e22'];
+    confettiPieces = [];
+    for(let i = 0; i < 150; i++){
+        confettiPieces.push({
+            x: Math.random() * cCanvas.width,
+            y: Math.random() * cCanvas.height - cCanvas.height,
+            r: Math.random() * 6 + 4,
+            d: Math.random() * 10 + 10,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            tilt: Math.floor(Math.random() * 10) - 10,
+            tiltAngleIncremental: Math.random() * 0.07 + 0.05,
+            tiltAngle: 0
+        });
+    }
+
+    function drawConfetti(){
+        cCtx.clearRect(0, 0, cCanvas.width, cCanvas.height);
+        confettiPieces.forEach(p => {
+            p.tiltAngle += p.tiltAngleIncremental;
+            p.y += (Math.cos(p.d) + 3 + p.r / 2) / 2;
+            p.tilt = Math.sin(p.tiltAngle) * 15;
+
+            cCtx.beginPath();
+            cCtx.lineWidth = p.r;
+            cCtx.strokeStyle = p.color;
+            cCtx.moveTo(p.x + p.tilt + p.r, p.y);
+            cCtx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r);
+            cCtx.stroke();
+
+            if(p.y > cCanvas.height){
+                p.x = Math.random() * cCanvas.width;
+                p.y = -20;
+            }
+        });
+        requestAnimationFrame(drawConfetti);
+    }
+    drawConfetti();
+}
+
+/* =========================================================
+   PANTALLAS FINALES
+========================================================= */
+function endGame(win){
+    running = false;
+    clearInterval(timerInterval);
+    if(bgMusicInterval) clearInterval(bgMusicInterval);
+
+    document.getElementById("gameContainer").style.display = "none";
+
+    if(win){
+        playSound('win');
+        document.getElementById("winScreen").style.display = "flex";
+        document.getElementById("winText").innerHTML = `
+            &iexcl;Incre&iacute;ble trabajo, <b>${playerName}</b>!<br><br>
+            Derrotaste a la horda zombie y demostraste tu dominio en las matem&aacute;ticas.<br>
+            Puntaje Final: <b>${score} puntos</b>.
+        `;
+        startConfetti();
+    } else {
+        document.getElementById("loseScreen").style.display = "flex";
+        document.getElementById("loseText").innerHTML = `
+            Buen intento, <b>${playerName}</b>.<br><br>
+            Los zombies lograron superarte esta vez. &iexcl;Sigue practicando tu agilidad mental para conseguir la victoria!
+        `;
+    }
+}
+
+/* =========================================================
+   ACTUALIZACIÓN Y RENDERIZADO
+========================================================= */
+function update(){
+    if(!running) return;
+
+    if(keys["w"] || keys["arrowup"]) player.y -= player.speed;
+    if(keys["s"] || keys["arrowdown"]) player.y += player.speed;
+    if(keys["a"] || keys["arrowleft"]) player.x -= player.speed;
+    if(keys["d"] || keys["arrowright"]) player.x += player.speed;
+
+    player.x = Math.max(player.r, Math.min(canvas.width - player.r, player.x));
+    player.y = Math.max(player.r, Math.min(canvas.height - player.r, player.y));
+
+    for(let i = bullets.length - 1; i >= 0; i--){
+        let b = bullets[i];
+        b.x += b.vx;
+        b.y += b.vy;
+
+        enemies.forEach(e => {
+            if(e.hp > 0 && Math.hypot(b.x - e.x, b.y - e.y) < e.r + 5){
+                e.hp--;
+                createParticles(b.x, b.y, e.color, 10);
+                playSound('hit');
+                bullets.splice(i, 1);
+
+                if(e.hp <= 0){
+                    defeated++;
+                    score += e.isBoss ? 500 : 50;
+
+                    if(Math.random() > 0.6){
+                        items.push({ x: e.x, y: e.y, r: 10, type: 'health' });
+                    }
+
+                    if(defeated >= required){
+                        if(level < 3){
+                            level++;
+                            showMessage("&iexcl;NIVEL COMPLETADO!", "#2ecc71");
+                            setTimeout(loadLevel, 1000);
+                        } else {
+                            endGame(true);
+                        }
+                    }
+                }
+            }
+        });
+
+        if(b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height){
+            bullets.splice(i, 1);
+        }
+    }
+
+    for(let i = particles.length - 1; i >= 0; i--){
+        let p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life--;
+        if(p.life <= 0) particles.splice(i, 1);
+    }
+
+    for(let i = items.length - 1; i >= 0; i--){
+        let item = items[i];
+        if(Math.hypot(player.x - item.x, player.y - item.y) < player.r + item.r){
+            if(item.type === 'health'){
+                lives++;
+                playSound('item');
+                showMessage("&iexcl;VIDA EXTRA! ??", "#e74c3c");
+                updateHUD();
+            }
+            items.splice(i, 1);
+        }
+    }
+
+    enemies.forEach(e => {
+        if(e.hp <= 0) return;
+
+        let angle = Math.atan2(player.y - e.y, player.x - e.x);
+        e.x += Math.cos(angle) * e.speed;
+        e.y += Math.sin(angle) * e.speed;
+
+        if(Math.hypot(player.x - e.x, player.y - e.y) < player.r + e.r){
+            lives--;
+            playSound('wrong');
+            updateHUD();
+            showMessage("&iexcl;TE DA&Ntilde;ARON!", "#e74c3c");
+
+            e.x -= Math.cos(angle) * 60;
+            e.y -= Math.sin(angle) * 60;
+
+            if(lives <= 0) endGame(false);
+        }
+    });
+}
+
+function render(){
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.strokeStyle = "#14221b";
+    ctx.lineWidth = 1;
+    const sz = 45;
+    for(let x = 0; x < canvas.width; x += sz){
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+    }
+    for(let y = 0; y < canvas.height; y += sz){
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+    }
+
+    items.forEach(it => {
+        ctx.fillStyle = "#e74c3c";
+        ctx.beginPath();
+        ctx.arc(it.x, it.y, it.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 12px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("+", it.x, it.y + 4);
+    });
+
+    ctx.fillStyle = "#3498db";
+    bullets.forEach(b => {
+        ctx.beginPath(); ctx.arc(b.x, b.y, 5, 0, Math.PI * 2); ctx.fill();
+    });
+
+    particles.forEach(p => {
+        ctx.fillStyle = p.color;
+        ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill();
+    });
+
+    enemies.forEach(e => {
+        if(e.hp <= 0) return;
+
+        ctx.fillStyle = e.color;
+        ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2); ctx.fill();
+
+        ctx.fillStyle = "#000";
+        let angle = Math.atan2(player.y - e.y, player.x - e.x);
+        let eyeX1 = e.x + Math.cos(angle - 0.5) * (e.r * 0.6);
+        let eyeY1 = e.y + Math.sin(angle - 0.5) * (e.r * 0.6);
+        let eyeX2 = e.x + Math.cos(angle + 0.5) * (e.r * 0.6);
+        let eyeY2 = e.y + Math.sin(angle + 0.5) * (e.r * 0.6);
+        ctx.beginPath(); ctx.arc(eyeX1, eyeY1, e.isBoss ? 6 : 2.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(eyeX2, eyeY2, e.isBoss ? 6 : 2.5, 0, Math.PI * 2); ctx.fill();
+
+        if(e.isBoss){
+            ctx.fillStyle = "#c0392b";
+            ctx.fillRect(e.x - 35, e.y - e.r - 18, 70, 7);
+            ctx.fillStyle = "#2ecc71";
+            ctx.fillRect(e.x - 35, e.y - e.r - 18, 70 * (e.hp / e.maxHp), 7);
+        }
+    });
+
+    ctx.fillStyle = "#2ecc71";
+    ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    let angle = Math.atan2(mouseY - player.y, mouseX - player.x);
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(player.x, player.y);
+    ctx.lineTo(player.x + Math.cos(angle) * (player.r + 8), player.y + Math.sin(angle) * (player.r + 8));
+    ctx.stroke();
+}
+
+function gameLoop(){
+    update();
+    render();
+    if(running) requestAnimationFrame(gameLoop);
+}
+</script>
+</body>
+</html>
